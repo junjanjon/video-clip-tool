@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 
 public/movies/*.mp4
+!public/movies/test.mp4
 outputs
