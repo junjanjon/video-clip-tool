@@ -13,6 +13,7 @@ function App() {
   const [copiedAlert, setCopiedAlert] = useState<ReactElement>(<> </>);
   const sourceRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const memoRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (0 < duration) {
       return;
@@ -108,14 +109,19 @@ function App() {
   const slider = (0 < duration) ?
     (
       <>
+        <div>
+          {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}
+        </div>
         <Slider
           value={trimTime[0]}
           onChange={handleChangeRange}
           step={step}
           min={0}
           max={duration}
-          valueLabelDisplay="auto"
+          valueLabelDisplay="on"
+          valueLabelFormat={convertTimeToText}
           disableSwap
+          style={{marginTop: '30px'}}
         />
         <Slider
           getAriaLabel={() => 'Minimum distance'}
@@ -124,26 +130,35 @@ function App() {
           step={step}
           min={trimTime[0] - 5}
           max={trimTime[1] + 20}
-          valueLabelDisplay="auto"
+          valueLabelDisplay="on"
+          valueLabelFormat={convertTimeToText}
+          style={{marginTop: '30px'}}
           disableSwap
         />
         {buttons}
-        <div style={{color: 'black'}}>
+        <div>
           {convertTimeToText(trimTime[0])} - {convertTimeToText(trimTime[1])} ({convertTimeToText(trimTime[1] - trimTime[0])})
         </div>
         {copiedAlert}
         <TextField
           inputRef={titleRef}
           fullWidth={true}
-        >
-        </TextField>
+        />
+        <TextField
+          inputRef={memoRef}
+          multiline={true}
+          minRows={5}
+          fullWidth={true}
+        />
         <textarea
-          value={convertTimeToCutCommand(sourceRef.current?.value || 'input', trimTime[0], trimTime[1], titleRef.current?.value || 'output')}
+          value={convertTimeToCutCommand(sourceRef.current?.value || 'input', trimTime[0], trimTime[1], titleRef.current?.value || 'output', memoRef.current?.value || '')}
+          style={{width: '100%', height: '100px'}}
           onClick={() => {
-            const command = convertTimeToCutCommand(sourceRef.current?.value || 'input', trimTime[0], trimTime[1], titleRef.current?.value || 'output');
+            const command = convertTimeToCutCommand(sourceRef.current?.value || 'input', trimTime[0], trimTime[1], titleRef.current?.value || 'output', memoRef.current?.value || '');
             navigator.clipboard.writeText(command);
             setCopiedAlert(<Alert severity="success">{`Copied to clipboard. Last Copied: ${command}`}</Alert>);
-          }}>
+          }}
+          readOnly={true}>
         </textarea>
       </>
     ) : <></>;
@@ -162,6 +177,7 @@ function App() {
       onClick={() => {
         if (sourceRef.current) {
           setSource(sourceRef.current.value);
+          setDuration(-1);
         }
       }}>test</Button>
   </>;
@@ -189,22 +205,34 @@ function replayVideo(video: HTMLVideoElement, startTime : number, endTime : numb
   }
 }
 
+// 0詰めテキストにする
+function formatText(num: number, length: number) {
+  return num.toString().padStart(length, '0');
+}
+
 function convertTimeToText(time: number) {
   const hours = Math.floor(time / 3600);
   const minutes = Math.floor((time - hours * 3600) / 60);
   const seconds = Math.floor(time - hours * 3600 - minutes * 60);
   const milliseconds = Math.floor((time - hours * 3600 - minutes * 60 - seconds) * 1000);
-  return hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
+  return `${hours}:${formatText(minutes,2)}:${formatText(seconds,2)}.${formatText(milliseconds,3)}`;
 }
 
-function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string) {
+function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string) {
   const start = convertTimeToText(startTime);
   const end = convertTimeToText(endTime);
   // path からファイル名を取得
   const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
   const outputDirPath = `outputs/${movieName}`;
   const outputPath = `outputs/${movieName}/${title}.mp4`;
-  return `mkdir -p ${outputDirPath}\nffmpeg -y -i ${path} -ss ${start} -to ${end} ${outputPath}`;
+  const memoText = memo.split('\n').map((line) => `# ${line}`).join('\n');
+
+  return [
+    `# ${title}`,
+    `mkdir -p ${outputDirPath}`,
+    `ffmpeg -y -i ${path} -ss ${start} -to ${end} ${outputPath}`,
+    memoText,
+  ].join('\n');
 }
 
 export default App;
