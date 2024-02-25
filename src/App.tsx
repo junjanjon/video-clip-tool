@@ -1,6 +1,6 @@
-import './App.css'
-import {Alert, Button, ButtonGroup, Slider, TextField} from "@mui/material";
-import {useState, useEffect, useRef, ReactElement} from "react";
+import './App.css';
+import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
+import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
   const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
-  const [source, setSource] = useState<string>("./public/movies/test.mp4");
+  const [source, setSource] = useState<string>('./public/movies/test.mp4');
   const [copiedAlert, setCopiedAlert] = useState<ReactElement>(<> </>);
   const sourceRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -80,9 +80,9 @@ function App() {
   };
 
   const buttonData = [
-    {label: "Start -1.00", value: -1.00},
-    {label: "Start -0.05", value: -0.05},
-    {label: "Reset", value: 0},
+    {label: 'Start -1.00', value: -1.00},
+    {label: 'Start -0.05', value: -0.05},
+    {label: 'Reset', value: 0},
   ];
 
   const buttons = <ButtonGroup>
@@ -92,18 +92,18 @@ function App() {
           key={index}
           onClick={
             () => {
-              setTrimTime([trimTime[0] + data.value, trimTime[1] + data.value])
+              setTrimTime([trimTime[0] + data.value, trimTime[1] + data.value]);
               if (videoRef.current) {
                 playVideo(videoRef.current, trimTime[0] + data.value);
               }
             }
           }
-          >
+        >
           {data.label}
-        </Button>
+        </Button>;
       })
     }
-  </ButtonGroup>
+  </ButtonGroup>;
 
   const slider = (0 < duration) ?
     (
@@ -128,7 +128,7 @@ function App() {
           disableSwap
         />
         {buttons}
-        <div style={{color: "black"}}>
+        <div style={{color: 'black'}}>
           {convertTimeToText(trimTime[0])} - {convertTimeToText(trimTime[1])} ({convertTimeToText(trimTime[1] - trimTime[0])})
         </div>
         {copiedAlert}
@@ -155,26 +155,26 @@ function App() {
       InputProps={{
         startAdornment: (<MovieIcon/>),
       }}
-      defaultValue={"./public/movies/test.mp4"}
-      >
+      defaultValue={source}
+    >
     </TextField>
     <Button
-    onClick={() => {
-      if (sourceRef.current) {
-        setSource(sourceRef.current.value);
-      }
-    }}>test</Button>
+      onClick={() => {
+        if (sourceRef.current) {
+          setSource(sourceRef.current.value);
+        }
+      }}>test</Button>
   </>;
 
   return (
     <>
       {selectMovieFile}
-      <video id={"target"}
-             src={source}
-             ref={videoRef} controls />
+      <video id={'target'}
+        src={source}
+        ref={videoRef} controls />
       {slider}
     </>
-  )
+  );
 }
 
 function playVideo(video: HTMLVideoElement, startTime : number) {
@@ -194,7 +194,7 @@ function convertTimeToText(time: number) {
   const minutes = Math.floor((time - hours * 3600) / 60);
   const seconds = Math.floor(time - hours * 3600 - minutes * 60);
   const milliseconds = Math.floor((time - hours * 3600 - minutes * 60 - seconds) * 1000);
-  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+  return hours + ':' + minutes + ':' + seconds + '.' + milliseconds;
 }
 
 function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string) {
@@ -207,4 +207,4 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   return `mkdir -p ${outputDirPath}\nffmpeg -y -i ${path} -ss ${start} -to ${end} ${outputPath}`;
 }
 
-export default App
+export default App;
