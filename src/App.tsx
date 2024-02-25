@@ -82,10 +82,75 @@ function App() {
     }
   };
 
+  function playVideoWrapper(time: number) {
+    if (videoRef.current) {
+      playVideo(videoRef.current, time);
+    }
+  }
+
   const buttonData = [
-    {label: 'Start -1.00', value: -1.00},
-    {label: 'Start -0.05', value: -0.05},
-    {label: 'Reset', value: 0},
+    {
+      label: 'Start -0.5',
+      callback: () => {
+        setTrimTime([trimTime[0] - 0.5, trimTime[1]]);
+        playVideoWrapper(trimTime[0] - 0.5);
+      }
+    },
+    {
+      label: 'Start -0.05',
+      callback: () => {
+        setTrimTime([trimTime[0] - 0.05, trimTime[1]]);
+        playVideoWrapper(trimTime[0] - 0.05);
+      }
+    },
+    {
+      label: <><MovieIcon/></>,
+      callback: () => {
+        playVideoWrapper(trimTime[0]);
+      }
+    },
+    {
+      label: 'Start +0.05',
+      callback: () => {
+        setTrimTime([trimTime[0] + 0.05, trimTime[1]]);
+        playVideoWrapper(trimTime[0] + 0.05);
+      }
+    },
+    {
+      label: 'Start +0.5',
+      callback: () => {
+        setTrimTime([trimTime[0] + 0.5, trimTime[1]]);
+        playVideoWrapper(trimTime[0] + 0.5);
+      }
+    },
+    {
+      label: 'End -0.5',
+      callback: () => {
+        setTrimTime([trimTime[0], trimTime[1] - 0.5]);
+        playVideoWrapper(trimTime[1] - 0.5 - minDistance);
+      }
+    },
+    {
+      label: 'End -0.05',
+      callback: () => {
+        setTrimTime([trimTime[0], trimTime[1] - 0.05]);
+        playVideoWrapper(trimTime[1] - 0.05 - minDistance);
+      }
+    },
+    {
+      label: 'End +0.05',
+      callback: () => {
+        setTrimTime([trimTime[0], trimTime[1] + 0.05]);
+        playVideoWrapper(trimTime[1] + 0.05 - minDistance);
+      }
+    },
+    {
+      label: 'End +0.5',
+      callback: () => {
+        setTrimTime([trimTime[0], trimTime[1] + 0.5]);
+        playVideoWrapper(trimTime[1] + 0.5 - minDistance);
+      }
+    }
   ];
 
   const buttons = <ButtonGroup>
@@ -93,15 +158,7 @@ function App() {
       buttonData.map((data, index) => {
         return <Button
           key={index}
-          onClick={
-            () => {
-              setTrimTime([trimTime[0] + data.value, trimTime[1] + data.value]);
-              if (videoRef.current) {
-                playVideo(videoRef.current, trimTime[0] + data.value);
-              }
-            }
-          }
-        >
+          onClick={data.callback}>
           {data.label}
         </Button>;
       })
