@@ -3,6 +3,8 @@ import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
 import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
 
+const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
+
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const minDistance = 2;
@@ -224,15 +226,15 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   const duration = convertTimeToText(endTime - startTime);
   // path からファイル名を取得
   const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
-  const outputDirPath = `outputs/${movieName}`;
-  const outputPath = `outputs/${movieName}/${title}.mp4`;
+  const outputDirPath = `${outputTargetDirPath}/${movieName}`;
+  const outputPath = `${outputDirPath}/${title}.mp4`;
   const memoText = memo.split('\n').map((line) => `# ${line}`).join('\n');
   const cropFilter = '-vf crop=640:640:640:80';
-  const outputCropPath = `outputs/${movieName}/${title}-crop.mp4`;
+  const outputCropPath = `${outputDirPath}/${title}-crop.mp4`;
   // const gifFilter = '-filter_complex "[0:v] fps=10,scale=320:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=none"';
   // const outputGifPath = `outputs/${movieName}/${title}.gif`;
   // const outputMp3Path = `outputs/${movieName}/${title}.mp3`;
-  const outputWavPath = `outputs/${movieName}/${title}.wav`;
+  const outputWavPath = `${outputDirPath}/${title}.wav`;
 
   return [
     `# ${title}`,
