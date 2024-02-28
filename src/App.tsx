@@ -127,28 +127,28 @@ function App() {
       label: 'End -0.5',
       callback: () => {
         setTrimTime([trimTime[0], trimTime[1] - 0.5]);
-        playVideoWrapper(trimTime[1] - 0.5 - minDistance);
+        playVideoWrapper(Math.max(trimTime[0], trimTime[1] - 0.5 - minDistance));
       }
     },
     {
       label: 'End -0.05',
       callback: () => {
         setTrimTime([trimTime[0], trimTime[1] - 0.05]);
-        playVideoWrapper(trimTime[1] - 0.05 - minDistance);
+        playVideoWrapper(Math.max(trimTime[0], trimTime[1] - 0.05 - minDistance));
       }
     },
     {
       label: 'End +0.05',
       callback: () => {
         setTrimTime([trimTime[0], trimTime[1] + 0.05]);
-        playVideoWrapper(trimTime[1] + 0.05 - minDistance);
+        playVideoWrapper(Math.max(trimTime[0], trimTime[1] + 0.05 - minDistance));
       }
     },
     {
       label: 'End +0.5',
       callback: () => {
         setTrimTime([trimTime[0], trimTime[1] + 0.5]);
-        playVideoWrapper(trimTime[1] + 0.5 - minDistance);
+        playVideoWrapper(Math.max(trimTime[0], trimTime[1] + 0.5 - minDistance));
       }
     }
   ];
