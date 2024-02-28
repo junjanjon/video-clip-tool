@@ -10,3 +10,7 @@
     border-width: 2px;
     border-style: solid;
 }
+
+video {
+    max-width: 1280px;
+}
