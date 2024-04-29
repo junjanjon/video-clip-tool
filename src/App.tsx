@@ -279,23 +279,32 @@ function App() {
         startAdornment: (<MovieIcon/>),
       }}
       defaultValue={source}
-    >
-    </TextField>
-    <Button
-      onClick={() => {
-        if (sourceRef.current) {
-          setSource(sourceRef.current.value);
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          setSource(sourceRef.current?.value || '');
           setDuration(-1);
         }
-      }}>test</Button>
+      }}
+    >
+    </TextField>
+    <input
+      type={'file'}
+      onChange={(event) => {
+        if (event.target.files) {
+          setSource(URL.createObjectURL(event.target.files[0]));
+          setDuration(-1);
+        }
+      }}
+    />
   </>;
 
   return (
     <>
       {selectMovieFile}
+      <hr/>
       <video id={'target'}
         src={source}
-        ref={videoRef} controls />
+        ref={videoRef} controls/>
       {slider}
     </>
   );
