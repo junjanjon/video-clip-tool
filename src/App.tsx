@@ -2,6 +2,23 @@ import './App.css';
 import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
 import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
+import Box from '@mui/material/Box';
+
+function VideoProgressBar(props: { currentTime: number, minTime: number, maxTime: number }) {
+  const percent = (props.currentTime - props.minTime) / (props.maxTime - props.minTime);
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <progress value={percent} style={{
+          width: '100%',
+        }} />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <div>{convertTimeToText(props.currentTime)}</div>
+      </Box>
+    </Box>
+  );
+}
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
@@ -196,16 +213,10 @@ function App() {
         <div>
           {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}
         </div>
-        <Slider
-          // 今の再生位置を表示するスライダー
-          value={currentProgressTime}
-          min={trimTime[0]}
-          max={trimTime[1]}
-          valueLabelDisplay="on"
-          valueLabelFormat={convertTimeToText}
-          disabled
-          style={{marginTop: '30px'}}
-        />
+        <VideoProgressBar
+          currentTime={currentProgressTime}
+          minTime={trimTime[0]}
+          maxTime={trimTime[1]}/>
         <Slider
           // 全動画時間の中での位置を指定するスライダー
           value={trimTime[0]}
@@ -234,7 +245,7 @@ function App() {
         />
         {buttons}
         <div>
-          {convertTimeToText(trimTime[0])} - {convertTimeToText(trimTime[1])} ({convertTimeToText(trimTime[1] - trimTime[0])})
+          {convertMilliSecondsTimeToText(trimTime[0])} - {convertMilliSecondsTimeToText(trimTime[1])} ({convertMilliSecondsTimeToText(trimTime[1] - trimTime[0])})
         </div>
         {copiedAlert}
         <TextField
@@ -311,14 +322,21 @@ function convertTimeToText(time: number) {
   const hours = Math.floor(time / 3600);
   const minutes = Math.floor((time - hours * 3600) / 60);
   const seconds = Math.floor(time - hours * 3600 - minutes * 60);
+  return `${hours}:${formatText(minutes,2)}:${formatText(seconds,2)}`;
+}
+
+function convertMilliSecondsTimeToText(time: number) {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time - hours * 3600) / 60);
+  const seconds = Math.floor(time - hours * 3600 - minutes * 60);
   const milliseconds = Math.floor((time - hours * 3600 - minutes * 60 - seconds) * 1000);
   return `${hours}:${formatText(minutes,2)}:${formatText(seconds,2)}.${formatText(milliseconds,3)}`;
 }
 
 function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string) {
-  const start = convertTimeToText(startTime);
-  // const end = convertTimeToText(endTime);
-  const duration = convertTimeToText(endTime - startTime);
+  const start = convertMilliSecondsTimeToText(startTime);
+  // const end = convertMilliSecondsTimeToText(endTime);
+  const duration = convertMilliSecondsTimeToText(endTime - startTime);
   // path からファイル名を取得
   const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
   const outputDirPath = `${outputTargetDirPath}/${movieName}`;
