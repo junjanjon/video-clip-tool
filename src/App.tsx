@@ -34,7 +34,7 @@ function App() {
   const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
-  const [source, setSource] = useState<string>('./public/movies/test.mp4');
+  const [source, setSource] = useState<string>('./movies/test.mp4');
   const [copiedAlert, setCopiedAlert] = useState<ReactElement>(<> </>);
   const sourceRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
