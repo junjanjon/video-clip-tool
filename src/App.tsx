@@ -5,6 +5,11 @@ import MovieIcon from '@mui/icons-material/Movie';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
+interface Mark {
+  value: number;
+  label: string;
+}
+
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
@@ -17,6 +22,7 @@ function App() {
   const sourceRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const memoRef = useRef<HTMLInputElement>(null);
+  const [marks, setMarks] = useState<Mark[]>([]);
   useEffect(() => {
     if (0 < duration) {
       return;
@@ -27,6 +33,22 @@ function App() {
           const video = videoRef.current;
           setDuration(() => video.duration);
           setTrimTime(() => [0, video.duration]);
+          setMarks(() => {
+            const durationMarksMapping = [
+              { duration: 60, step: 10 },
+              { duration: 60 * 5, step: 60 },
+              { duration: 60 * 10, step: 60 * 2 },
+              { duration: 60 * 30, step: 60 * 5 },
+              { duration: 60 * 60, step: 60 * 10 },
+              { duration: 60 * 60 * 3, step: 60 * 30 },
+            ];
+            const tmp: Mark[] = [];
+            const step = durationMarksMapping.find((mapping) => { return video.duration < mapping.duration; })?.step || (60 * 60);
+            for (let i = 0; i < video.duration; i += step) {
+              tmp.push({value: i, label: convertTimeToText(i)});
+            }
+            return tmp;
+          });
         }
       }
     }, 1000);
@@ -193,6 +215,7 @@ function App() {
           max={duration}
           valueLabelDisplay="on"
           valueLabelFormat={convertTimeToText}
+          marks={marks}
           disableSwap
           style={{marginTop: '30px'}}
         />
