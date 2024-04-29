@@ -7,7 +7,7 @@ const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const minDistance = 2;
+  const minDistance = 0.5;
   const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
