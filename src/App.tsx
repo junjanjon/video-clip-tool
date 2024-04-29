@@ -7,6 +7,7 @@ const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
   const minDistance = 0.5;
   const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
@@ -35,11 +36,13 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (videoRef.current) {
-        if (!Number.isNaN(videoRef.current.duration)) {
-          replayVideo(videoRef.current, trimTime[0], trimTime[1]);
+        const video = videoRef.current;
+        if (!Number.isNaN(video.duration)) {
+          replayVideo(video, trimTime[0], trimTime[1]);
+          setCurrentProgressTime(() => video.currentTime);
         }
       }
-    }, 1);
+    }, 1 / 60);
     return () => clearInterval(interval);
   }, [trimTime]);
 
@@ -172,6 +175,17 @@ function App() {
           {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}
         </div>
         <Slider
+          // 今の再生位置を表示するスライダー
+          value={currentProgressTime}
+          min={trimTime[0]}
+          max={trimTime[1]}
+          valueLabelDisplay="on"
+          valueLabelFormat={convertTimeToText}
+          disabled
+          style={{marginTop: '30px'}}
+        />
+        <Slider
+          // 全動画時間の中での位置を指定するスライダー
           value={trimTime[0]}
           onChange={handleChangeRange}
           step={step}
@@ -183,6 +197,7 @@ function App() {
           style={{marginTop: '30px'}}
         />
         <Slider
+          // クリッピングする部分を指定するスライダー
           getAriaLabel={() => 'Minimum distance'}
           value={trimTime}
           onChange={handleChange1}
