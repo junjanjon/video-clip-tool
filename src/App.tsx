@@ -165,69 +165,47 @@ function App() {
     }
   }
 
+  function createButtonData(startDiff: number, endDiff : number) {
+    if (startDiff === 0) {
+      return {
+        label: `End ${endDiff}`,
+        callback: () => {
+          const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
+          const endTime = Math.min(trimTime[1] + endDiff, duration);
+          setTrimTime([startTime, endTime]);
+          setTrimMarks(() => calculateTrimMarks(startTime, endTime));
+          playVideoWrapper(endTime - 2);
+        }
+      };
+    } else {
+      return {
+        label: `Start ${startDiff}`,
+        callback: () => {
+          const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
+          const endTime = Math.min(trimTime[1] + endDiff, duration);
+          setTrimTime([startTime, endTime]);
+          setTrimMarks(() => calculateTrimMarks(startTime, endTime));
+          playVideoWrapper(startTime);
+        }
+      };
+    }
+  }
+
   const buttonData = [
-    {
-      label: 'Start -0.5',
-      callback: () => {
-        setTrimTime([trimTime[0] - 0.5, trimTime[1]]);
-        playVideoWrapper(trimTime[0] - 0.5);
-      }
-    },
-    {
-      label: 'Start -0.05',
-      callback: () => {
-        setTrimTime([trimTime[0] - 0.05, trimTime[1]]);
-        playVideoWrapper(trimTime[0] - 0.05);
-      }
-    },
+    createButtonData(-0.5, 0),
+    createButtonData(-0.05, 0),
     {
       label: <><MovieIcon/></>,
       callback: () => {
         playVideoWrapper(trimTime[0]);
       }
     },
-    {
-      label: 'Start +0.05',
-      callback: () => {
-        setTrimTime([trimTime[0] + 0.05, trimTime[1]]);
-        playVideoWrapper(trimTime[0] + 0.05);
-      }
-    },
-    {
-      label: 'Start +0.5',
-      callback: () => {
-        setTrimTime([trimTime[0] + 0.5, trimTime[1]]);
-        playVideoWrapper(trimTime[0] + 0.5);
-      }
-    },
-    {
-      label: 'End -0.5',
-      callback: () => {
-        setTrimTime([trimTime[0], trimTime[1] - 0.5]);
-        playVideoWrapper(Math.max(trimTime[0], trimTime[1] - 0.5 - minDistance));
-      }
-    },
-    {
-      label: 'End -0.05',
-      callback: () => {
-        setTrimTime([trimTime[0], trimTime[1] - 0.05]);
-        playVideoWrapper(Math.max(trimTime[0], trimTime[1] - 0.05 - minDistance));
-      }
-    },
-    {
-      label: 'End +0.05',
-      callback: () => {
-        setTrimTime([trimTime[0], trimTime[1] + 0.05]);
-        playVideoWrapper(Math.max(trimTime[0], trimTime[1] + 0.05 - minDistance));
-      }
-    },
-    {
-      label: 'End +0.5',
-      callback: () => {
-        setTrimTime([trimTime[0], trimTime[1] + 0.5]);
-        playVideoWrapper(Math.max(trimTime[0], trimTime[1] + 0.5 - minDistance));
-      }
-    }
+    createButtonData(0.05, 0),
+    createButtonData(0.5, 0),
+    createButtonData(0, -0.5),
+    createButtonData(0, -0.05),
+    createButtonData(0, 0.05),
+    createButtonData(0, 0.5),
   ];
 
   const buttons = <ButtonGroup>
