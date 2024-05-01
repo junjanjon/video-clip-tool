@@ -2,35 +2,9 @@ import './App.css';
 import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
 import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
-import Box from '@mui/material/Box';
 import MovieFileSelector from './components/MovieFileSelector.tsx';
-
-function VideoProgressBar(props: { currentTime: number, minTime: number, maxTime: number, changeCallback: (time: number) => void}) {
-  const percent = (props.currentTime - props.minTime) / (props.maxTime - props.minTime);
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
-        <input
-          type={'range'}
-          value={percent}
-          onChange={(event) => {
-            const value = event.target.value;
-            const time = props.minTime + (props.maxTime - props.minTime) * parseFloat(value);
-            props.changeCallback(time);
-          }}
-          min={0}
-          max={1}
-          step={0.001}
-          style={{
-            width: '100%',
-          }} />
-      </Box>
-      <Box sx={{ minWidth: 35 }}>
-        <div>{convertTimeToText(props.currentTime)}</div>
-      </Box>
-    </Box>
-  );
-}
+import VideoProgressBar from './components/VideoProgressBar.tsx';
+import {convertTimeToText, convertTimeToShortText, convertMilliSecondsTimeToText} from './lib/FormatTime.tsx';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
@@ -372,37 +346,6 @@ function replayVideo(video: HTMLVideoElement, startTime : number, endTime : numb
   }
 }
 
-// 0詰めテキストにする
-function formatText(num: number, length: number) {
-  return num.toString().padStart(length, '0');
-}
-
-function convertTimeToShortText(time: number) {
-  const hours = Math.floor(time / 3600);
-  const minutes = Math.floor((time - hours * 3600) / 60);
-  const seconds = Math.floor(time - hours * 3600 - minutes * 60);
-  if (0 < hours) {
-    return `${hours}:${formatText(minutes, 2)}:${formatText(seconds, 2)}`;
-  } else {
-    return `${minutes}:${formatText(seconds, 2)}`;
-  }
-}
-
-
-function convertTimeToText(time: number) {
-  const hours = Math.floor(time / 3600);
-  const minutes = Math.floor((time - hours * 3600) / 60);
-  const seconds = Math.floor(time - hours * 3600 - minutes * 60);
-  return `${hours}:${formatText(minutes,2)}:${formatText(seconds,2)}`;
-}
-
-function convertMilliSecondsTimeToText(time: number) {
-  const hours = Math.floor(time / 3600);
-  const minutes = Math.floor((time - hours * 3600) / 60);
-  const seconds = Math.floor(time - hours * 3600 - minutes * 60);
-  const milliseconds = Math.floor((time - hours * 3600 - minutes * 60 - seconds) * 1000);
-  return `${hours}:${formatText(minutes,2)}:${formatText(seconds,2)}.${formatText(milliseconds,3)}`;
-}
 
 function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string) {
   const start = convertMilliSecondsTimeToText(startTime);
