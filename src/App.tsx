@@ -334,18 +334,38 @@ function App() {
       }}
     >
     </TextField>
-    <input
-      type={'file'}
-      onChange={(event) => {
-        if (event.target.files) {
-          setSource(URL.createObjectURL(event.target.files[0]));
+    <Box
+      component="section"
+      sx={{ p: 2, border: '1px dashed grey' }}
+      onDrop={(event) => {
+        event.preventDefault();
+        if (event.dataTransfer.files && 0 < event.dataTransfer.files.length) {
+          setSource(URL.createObjectURL(event.dataTransfer.files[0]));
           if (sourceRef.current) {
-            sourceRef.current.value = event.target.files[0].name;
+            sourceRef.current.value = event.dataTransfer.files[0].name;
           }
           setDuration(-1);
         }
       }}
-    />
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }}
+    >
+      <h2>Movie File Drag & Drop</h2>
+      <input
+        type={'file'}
+        onChange={(event) => {
+          if (event.target.files) {
+            setSource(URL.createObjectURL(event.target.files[0]));
+            if (sourceRef.current) {
+              sourceRef.current.value = event.target.files[0].name;
+            }
+            setDuration(-1);
+          }
+        }}
+      />
+    </Box>
   </>;
 
   return (
