@@ -48,6 +48,22 @@ function calculateMarks(duration: number): Mark[] {
   return marks;
 }
 
+function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
+  const duration = endTime - startTime;
+  const durationMarksMapping = [
+    { duration: 30, step: 5 },
+    { duration: 60, step: 10 },
+    { duration: 60 * 5, step: 30 },
+  ];
+  const marks: Mark[] = [];
+  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60);
+  for (let time = startTime; time < (endTime + 20); time += step) {
+    const markTime = time - startTime;
+    marks.push({value: time, label: convertTimeToShortText(markTime)});
+  }
+  return marks;
+}
+
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
@@ -61,6 +77,7 @@ function App() {
   const titleRef = useRef<HTMLInputElement>(null);
   const memoRef = useRef<HTMLInputElement>(null);
   const [marks, setMarks] = useState<Mark[]>([]);
+  const [trimMarks, setTrimMarks] = useState<Mark[]>([]);
 
   /**
    * 動画変更時のコールバック
@@ -140,12 +157,14 @@ function App() {
       if (videoRef.current) {
         const startTime = Math.max(Math.min(newValue[0], trimTime[1] - minDistance), 0);
         setTrimTime([startTime, trimTime[1]]);
+        setTrimMarks(() => calculateTrimMarks(startTime, trimTime[1]));
         playVideo(videoRef.current, trimTime[0]);
       }
     } else {
       if (videoRef.current) {
         const endTime = Math.min(Math.max(newValue[1], trimTime[0] + minDistance), videoRef.current.duration);
         setTrimTime([trimTime[0], endTime]);
+        setTrimMarks(() => calculateTrimMarks(trimTime[0], endTime));
         playVideo(videoRef.current, endTime - minDistance);
       }
     }
@@ -263,8 +282,9 @@ function App() {
           value={trimTime}
           onChange={handleChange1}
           step={step}
-          min={trimTime[0] - 5}
-          max={trimTime[1] + 20}
+          min={Math.max(trimTime[0] - 5, 0)}
+          max={Math.min(trimTime[1] + 20, duration)}
+          marks={trimMarks}
           valueLabelDisplay="on"
           valueLabelFormat={convertTimeToText}
           style={{marginTop: '30px'}}
@@ -364,6 +384,18 @@ function replayVideo(video: HTMLVideoElement, startTime : number, endTime : numb
 function formatText(num: number, length: number) {
   return num.toString().padStart(length, '0');
 }
+
+function convertTimeToShortText(time: number) {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time - hours * 3600) / 60);
+  const seconds = Math.floor(time - hours * 3600 - minutes * 60);
+  if (0 < hours) {
+    return `${hours}:${formatText(minutes, 2)}:${formatText(seconds, 2)}`;
+  } else {
+    return `${minutes}:${formatText(seconds, 2)}`;
+  }
+}
+
 
 function convertTimeToText(time: number) {
   const hours = Math.floor(time / 3600);
