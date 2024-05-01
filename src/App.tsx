@@ -137,15 +137,16 @@ function App() {
     }
 
     if (activeThumb === 0) {
-      setTrimTime([Math.max(Math.min(newValue[0], trimTime[1] - minDistance), 0), trimTime[1]]);
       if (videoRef.current) {
+        const startTime = Math.max(Math.min(newValue[0], trimTime[1] - minDistance), 0);
+        setTrimTime([startTime, trimTime[1]]);
         playVideo(videoRef.current, trimTime[0]);
       }
     } else {
-      const lastTime = Math.max(newValue[1], trimTime[0] + minDistance);
-      setTrimTime([trimTime[0], lastTime]);
       if (videoRef.current) {
-        playVideo(videoRef.current, lastTime - minDistance);
+        const endTime = Math.min(Math.max(newValue[1], trimTime[0] + minDistance), videoRef.current.duration);
+        setTrimTime([trimTime[0], endTime]);
+        playVideo(videoRef.current, endTime - minDistance);
       }
     }
   };
@@ -353,7 +354,7 @@ function playVideo(video: HTMLVideoElement, startTime : number) {
  * @param endTime
  */
 function replayVideo(video: HTMLVideoElement, startTime : number, endTime : number) {
-  if (endTime < video.currentTime) {
+  if (endTime <= video.currentTime) {
     video.currentTime = startTime;
     video.play();
   }
