@@ -339,6 +339,9 @@ function App() {
       onChange={(event) => {
         if (event.target.files) {
           setSource(URL.createObjectURL(event.target.files[0]));
+          if (sourceRef.current) {
+            sourceRef.current.value = event.target.files[0].name;
+          }
           setDuration(-1);
         }
       }}
