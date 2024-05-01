@@ -118,10 +118,11 @@ function App() {
       return;
     }
 
-    setTrimTime([Math.min(Math.max(newValue, 0), duration - 10), Math.min(newValue + 10, duration)]);
-    if (videoRef.current) {
-      playVideo(videoRef.current, trimTime[0]);
-    }
+    const startTime = Math.min(Math.max(newValue, 0), duration - 10);
+    const endTime = Math.min(startTime + 10, duration);
+    setTrimTime([startTime, endTime]);
+    setTrimMarks(() => calculateTrimMarks(startTime, endTime));
+    playVideoWrapper(startTime);
   };
 
   /**
@@ -252,19 +253,6 @@ function App() {
           changeCallback={playVideoWrapper}
         />
         <Slider
-          // 全動画時間の中での位置を指定するスライダー
-          value={trimTime[0]}
-          onChange={handleChangeRange}
-          step={step}
-          min={0}
-          max={duration}
-          valueLabelDisplay="on"
-          valueLabelFormat={convertTimeToText}
-          marks={marks}
-          disableSwap
-          style={{marginTop: '30px'}}
-        />
-        <Slider
           // クリッピングする部分を指定するスライダー
           getAriaLabel={() => 'Minimum distance'}
           value={trimTime}
@@ -277,6 +265,17 @@ function App() {
           valueLabelFormat={convertTimeToText}
           style={{marginTop: '30px'}}
           disableSwap
+        />
+        <Slider
+          // 全動画時間の中での位置を指定するスライダー
+          value={trimTime[0]}
+          onChange={handleChangeRange}
+          step={step}
+          min={0}
+          max={duration}
+          marks={marks}
+          disableSwap
+          style={{marginTop: '30px'}}
         />
         {buttons}
         <div>
