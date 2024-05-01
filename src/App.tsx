@@ -3,6 +3,7 @@ import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
 import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
 import Box from '@mui/material/Box';
+import MovieFileSelector from './components/MovieFileSelector.tsx';
 
 function VideoProgressBar(props: { currentTime: number, minTime: number, maxTime: number }) {
   const percent = (props.currentTime - props.minTime) / (props.maxTime - props.minTime);
@@ -318,59 +319,14 @@ function App() {
       </>
     ) : <></>;
 
-  const selectMovieFile = <>
-    <TextField
-      inputRef={sourceRef}
-      fullWidth={true}
-      InputProps={{
-        startAdornment: (<MovieIcon/>),
-      }}
-      defaultValue={source}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          setSource(sourceRef.current?.value || '');
-          setDuration(-1);
-        }
-      }}
-    >
-    </TextField>
-    <Box
-      component="section"
-      sx={{ p: 2, border: '1px dashed grey' }}
-      onDrop={(event) => {
-        event.preventDefault();
-        if (event.dataTransfer.files && 0 < event.dataTransfer.files.length) {
-          setSource(URL.createObjectURL(event.dataTransfer.files[0]));
-          if (sourceRef.current) {
-            sourceRef.current.value = event.dataTransfer.files[0].name;
-          }
-          setDuration(-1);
-        }
-      }}
-      onDragOver={(event) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy';
-      }}
-    >
-      <h2>Movie File Drag & Drop</h2>
-      <input
-        type={'file'}
-        onChange={(event) => {
-          if (event.target.files) {
-            setSource(URL.createObjectURL(event.target.files[0]));
-            if (sourceRef.current) {
-              sourceRef.current.value = event.target.files[0].name;
-            }
-            setDuration(-1);
-          }
-        }}
-      />
-    </Box>
-  </>;
-
   return (
     <>
-      {selectMovieFile}
+      <MovieFileSelector
+        source={source}
+        setSource={setSource}
+        setDuration={setDuration}
+        sourceRef={sourceRef}
+      />
       <hr/>
       <video id={'target'}
         src={source}
