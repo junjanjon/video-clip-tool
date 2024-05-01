@@ -27,6 +27,27 @@ interface Mark {
   label: string;
 }
 
+/**
+ * 指定された動画の時間に合わせてマークを計算する
+ * @param duration
+ */
+function calculateMarks(duration: number): Mark[] {
+  const durationMarksMapping = [
+    { duration: 60, step: 10 },
+    { duration: 60 * 5, step: 60 },
+    { duration: 60 * 10, step: 60 * 2 },
+    { duration: 60 * 30, step: 60 * 5 },
+    { duration: 60 * 60, step: 60 * 10 },
+    { duration: 60 * 60 * 3, step: 60 * 30 },
+  ];
+  const marks: Mark[] = [];
+  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60 * 60);
+  for (let i = 0; i < duration; i += step) {
+    marks.push({value: i, label: convertTimeToText(i)});
+  }
+  return marks;
+}
+
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
@@ -40,6 +61,10 @@ function App() {
   const titleRef = useRef<HTMLInputElement>(null);
   const memoRef = useRef<HTMLInputElement>(null);
   const [marks, setMarks] = useState<Mark[]>([]);
+
+  /**
+   * 動画変更時のコールバック
+   */
   useEffect(() => {
     if (0 < duration) {
       return;
@@ -50,29 +75,18 @@ function App() {
           const video = videoRef.current;
           setDuration(() => video.duration);
           setTrimTime(() => [0, video.duration]);
-          setMarks(() => {
-            const durationMarksMapping = [
-              { duration: 60, step: 10 },
-              { duration: 60 * 5, step: 60 },
-              { duration: 60 * 10, step: 60 * 2 },
-              { duration: 60 * 30, step: 60 * 5 },
-              { duration: 60 * 60, step: 60 * 10 },
-              { duration: 60 * 60 * 3, step: 60 * 30 },
-            ];
-            const tmp: Mark[] = [];
-            const step = durationMarksMapping.find((mapping) => { return video.duration < mapping.duration; })?.step || (60 * 60);
-            for (let i = 0; i < video.duration; i += step) {
-              tmp.push({value: i, label: convertTimeToText(i)});
-            }
-            return tmp;
-          });
+          setMarks(() => calculateMarks(video.duration));
         }
       }
     }, 1000);
     return () => clearInterval(interval);
   }, [duration]);
 
+  /**
+   * トリミング範囲変更時のコールバック
+   */
   useEffect(() => {
+    // 動画の再生位置を監視する
     const interval = setInterval(() => {
       if (videoRef.current) {
         const video = videoRef.current;
@@ -85,6 +99,12 @@ function App() {
     return () => clearInterval(interval);
   }, [trimTime]);
 
+  /**
+   * トリミング時間開始位置スライダーの値が変更されたときのコールバック
+   * @param _
+   * @param newValue
+   * @param __
+   */
   const handleChangeRange = (
     _: Event,
     newValue: number | number[],
@@ -101,6 +121,12 @@ function App() {
     }
   };
 
+  /**
+   * トリミング時間範囲スライダーの値が変更されたときのコールバック
+   * @param _
+   * @param newValue
+   * @param activeThumb
+   */
   const handleChange1 = (
     _: Event,
     newValue: number | number[],
@@ -310,11 +336,22 @@ function App() {
   );
 }
 
+/**
+ * 動画を再生する
+ * @param video
+ * @param startTime
+ */
 function playVideo(video: HTMLVideoElement, startTime : number) {
   video.currentTime = startTime;
   video.play();
 }
 
+/**
+ * 動画の再生位置が終了位置を超えた場合、開始位置に戻して再生する
+ * @param video
+ * @param startTime
+ * @param endTime
+ */
 function replayVideo(video: HTMLVideoElement, startTime : number, endTime : number) {
   if (endTime < video.currentTime) {
     video.currentTime = startTime;
