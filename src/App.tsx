@@ -197,7 +197,22 @@ function App() {
     {
       label: <><MovieIcon/></>,
       callback: () => {
-        playVideoWrapper(trimTime[0]);
+        if (!videoRef.current) {
+          return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const context2D = canvas.getContext('2d');
+        if (!context2D) {
+          return;
+        }
+        context2D.drawImage(videoRef.current as HTMLVideoElement, 0, 0, canvas.width, canvas.height);
+        const downloadLink = document.createElement('a');
+        downloadLink.appendChild(canvas);
+        downloadLink.href = canvas.toDataURL('image/png');
+        downloadLink.download = 'thumbnail.png';
+        document.getElementById('root')?.appendChild(downloadLink);
       }
     },
     createButtonData(0.05, 0),
@@ -230,7 +245,11 @@ function App() {
           currentTime={currentProgressTime}
           minTime={trimTime[0]}
           maxTime={trimTime[1]}
-          changeCallback={playVideoWrapper}
+          changeCallback={(time) => {
+            if (videoRef.current) {
+              videoRef.current.currentTime = time;
+            }
+          }}
         />
         <Slider
           // クリッピングする部分を指定するスライダー
