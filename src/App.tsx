@@ -7,6 +7,9 @@ import VideoProgressBar from './components/VideoProgressBar.tsx';
 import {convertTimeToText, convertTimeToShortText, convertMilliSecondsTimeToText} from './lib/FormatTime.tsx';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
+const startTimeSpace = 5;
+const endTimeSpace = 20;
+const minDistance = 0.5;
 
 interface Mark {
   value: number;
@@ -43,7 +46,7 @@ function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
   ];
   const marks: Mark[] = [];
   const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60);
-  for (let time = startTime; time < (endTime + 20); time += step) {
+  for (let time = startTime; time < (endTime + endTimeSpace); time += step) {
     const markTime = time - startTime;
     marks.push({value: time, label: convertTimeToShortText(markTime)});
   }
@@ -53,7 +56,6 @@ function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
-  const minDistance = 0.5;
   const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
@@ -258,8 +260,8 @@ function App() {
           value={trimTime}
           onChange={handleChange1}
           step={step}
-          min={Math.max(trimTime[0] - 5, 0)}
-          max={Math.min(trimTime[1] + 20, duration)}
+          min={Math.max(trimTime[0] - startTimeSpace, 0)}
+          max={Math.min(trimTime[1] + endTimeSpace, duration)}
           marks={trimMarks}
           valueLabelDisplay="on"
           valueLabelFormat={convertTimeToText}
@@ -275,7 +277,6 @@ function App() {
           max={duration}
           marks={marks}
           disableSwap
-          style={{marginTop: '30px'}}
         />
         {buttons}
         <div>
