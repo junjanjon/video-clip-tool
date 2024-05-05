@@ -23,7 +23,7 @@ export interface Preview {
 }
 
 function convertTimeToCutCommand(path: string, startTime: number, endTime: number,
-  title: string, name: string, ruby: string, clipUrl: string,
+  title: string, name: string, ruby: string, category: string, clipUrl: string,
   memo: string, preview: Preview) {
   const start = convertMilliSecondsTimeToText(startTime);
   // const end = convertMilliSecondsTimeToText(endTime);
@@ -36,6 +36,7 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   const memoText = [
     `# name: ${name}`,
     `# ruby: ${ruby}`,
+    `# category: ${category}`,
     `# clipUrl: ${clipUrl}`,
     memo.split('\n').map((line) => `# ${line}`).join('\n')
   ].join('\n');
@@ -66,6 +67,19 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     ].join('\n');
   });
 
+  const dataPath = `../../dataset/sounds/${movieName}.yml`;
+  const createDataCommand = [
+    `touch ${dataPath}`,
+    `cat <<EOF >> ${dataPath}`,
+    `- name: "${name}"`,
+    `  ruby: "${ruby}"`,
+    `  source: "${movieName}"`,
+    `  fileName: "${movieName}/${title}.wav"`,
+    `  category: [${category.split(',').map((c) => `"${c}"`)}]`,
+    `  clipUrl: "${clipUrl}"`,
+    'EOF',
+  ].join('\n');
+
   return [
     `# ${title}`,
     `mkdir -p ${outputDirPath}`,
@@ -76,6 +90,7 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     sourceCropCommands.join('\n'),
     mergeCommands.join('\n'),
     memoText,
+    createDataCommand,
     '\n'
   ].join('\n');
 }

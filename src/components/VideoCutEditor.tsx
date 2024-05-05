@@ -12,6 +12,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const [title, setTitle] = useState<string>('title');
   const [name, setName] = useState<string>('name');
   const [ruby, setRuby] = useState<string>('ruby');
+  const [category, setCategory] = useState<string>('emotions');
   const [clipUrl, setClipUrl] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
   const [preview, setPreview] = useState<Preview>({
@@ -19,7 +20,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
     crops: []
   });
   const command = convertTimeToCutCommand(sourcePath, startTime, endTime,
-    title, name, ruby, clipUrl,
+    title, name, ruby, category, clipUrl,
     memo, preview);
 
   return (
@@ -48,6 +49,13 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
         fullWidth={true}
         defaultValue={ruby}
         onChange={(event) => {setRuby(event.target.value);}}
+        style={{marginTop: '10px'}}
+      />
+      <TextField
+        label="Category"
+        fullWidth={true}
+        defaultValue={category}
+        onChange={(event) => {setCategory(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
