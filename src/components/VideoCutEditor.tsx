@@ -1,4 +1,4 @@
-import {Alert, Button, TextField} from '@mui/material';
+import {Alert, Button, Grid, TextField} from '@mui/material';
 import {ReactElement, useEffect, useState} from 'react';
 import {convertTimeToCutCommand, Preview, Rect} from '../lib/CutCommand.tsx';
 
@@ -10,6 +10,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const {sourcePath, startTime, endTime} = props;
   const [copiedAlert, setCopiedAlert] = useState<ReactElement>(<> </>);
   const [title, setTitle] = useState<string>('title');
+  const [name, setName] = useState<string>('name');
   const [ruby, setRuby] = useState<string>('ruby');
   const [clipUrl, setClipUrl] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
@@ -17,7 +18,9 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
     size: {width: 1080, height: 1920},
     crops: []
   });
-  const command = convertTimeToCutCommand(sourcePath, startTime, endTime, title, memo, preview);
+  const command = convertTimeToCutCommand(sourcePath, startTime, endTime,
+    title, name, ruby, clipUrl,
+    memo, preview);
 
   return (
     <div>
@@ -31,6 +34,13 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
         fullWidth={true}
         defaultValue={title}
         onChange={(event) => {setTitle(event.target.value);}}
+        style={{marginTop: '10px'}}
+      />
+      <TextField
+        label="Name"
+        fullWidth={true}
+        defaultValue={name}
+        onChange={(event) => {setName(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
@@ -121,13 +131,14 @@ function cropVideoUpdate(preview : Preview){
   if (!context2D) {
     return;
   }
-  cropCanvas.width = preview.size.width;
-  cropCanvas.height = preview.size.height;
+  const scale = Math.min(preview.size.width, preview.size.height) / 300;
+  cropCanvas.width = preview.size.width / scale;
+  cropCanvas.height = preview.size.height / scale;
   context2D.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
   for (const crop of preview.crops) {
     context2D.drawImage(videoRef,
       crop.source.x, crop.source.y, crop.source.width, crop.source.height,
-      crop.draw.x,crop.draw.y, crop.draw.width, crop.draw.height
+      crop.draw.x / scale, crop.draw.y / scale, crop.draw.width / scale, crop.draw.height / scale
     );
   }
 }
@@ -145,9 +156,6 @@ function CropEditor(props: {preview: Preview, setPreview: (preview: Preview) => 
 
   return (
     <div>
-      <canvas
-        id={'cropCanvas'}
-      />
       <TextField
         label="width"
         defaultValue={preview.size.width.toString()}
@@ -164,79 +172,91 @@ function CropEditor(props: {preview: Preview, setPreview: (preview: Preview) => 
       />
       {preview.crops.map((crop, index) => {
         return (
-          <div key={index}>
-            <TextField
-              label={`source x[${index}]`}
-              defaultValue={crop.source.x.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].source.x = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`source y[${index}]`}
-              defaultValue={crop.source.y.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].source.y = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`source width[${index}]`}
-              defaultValue={crop.source.width.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].source.width = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`source height[${index}]`}
-              defaultValue={crop.source.height.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].source.height = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`draw x[${index}]`}
-              defaultValue={crop.draw.x.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].draw.x = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`draw y[${index}]`}
-              defaultValue={crop.draw.y.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].draw.y = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`draw width[${index}]`}
-              defaultValue={crop.draw.width.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].draw.width = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
-            <TextField
-              label={`draw height[${index}]`}
-              defaultValue={crop.draw.height.toString()}
-              onChange={(event) => {
-                const newCrop = preview.crops.slice();
-                newCrop[index].draw.height = parseInt(event.target.value);
-                setPreview({size: preview.size, crops: newCrop});
-              }}
-            />
+          <div key={index} style={{
+            marginTop: '10px'
+          }}>
+            <Grid container columns={4} spacing={2}>
+              <Grid item xs={2}>
+                <TextField
+                  label={`source x[${index}]`}
+                  defaultValue={crop.source.x.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].source.x = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+                <TextField
+                  label={`source y[${index}]`}
+                  defaultValue={crop.source.y.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].source.y = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  label={`source width[${index}]`}
+                  defaultValue={crop.source.width.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].source.width = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+                <TextField
+                  label={`source height[${index}]`}
+                  defaultValue={crop.source.height.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].source.height = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  label={`draw x[${index}]`}
+                  defaultValue={crop.draw.x.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].draw.x = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+                <TextField
+                  label={`draw y[${index}]`}
+                  defaultValue={crop.draw.y.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].draw.y = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  label={`draw width[${index}]`}
+                  defaultValue={crop.draw.width.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].draw.width = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+                <TextField
+                  label={`draw height[${index}]`}
+                  defaultValue={crop.draw.height.toString()}
+                  onChange={(event) => {
+                    const newCrop = preview.crops.slice();
+                    newCrop[index].draw.height = parseInt(event.target.value);
+                    setPreview({size: preview.size, crops: newCrop});
+                  }}
+                />
+              </Grid>
+            </Grid>
           </div>
         );
       })}
@@ -251,6 +271,14 @@ function CropEditor(props: {preview: Preview, setPreview: (preview: Preview) => 
           setPreview({size: preview.size, crops: newCrop});
         }}
       >Add Crop</Button>
+      <hr/>
+      <canvas
+        id={'cropCanvas'}
+        style={{
+          border: 'solid 1px #000',
+          backgroundColor: '#000'
+        }}
+      />
     </div>
   );
 }

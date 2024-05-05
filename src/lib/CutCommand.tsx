@@ -22,7 +22,9 @@ export interface Preview {
   crops: Crop[];
 }
 
-function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string, preview: Preview) {
+function convertTimeToCutCommand(path: string, startTime: number, endTime: number,
+  title: string, name: string, ruby: string, clipUrl: string,
+  memo: string, preview: Preview) {
   const start = convertMilliSecondsTimeToText(startTime);
   // const end = convertMilliSecondsTimeToText(endTime);
   const durationSeconds = (endTime - startTime);
@@ -31,7 +33,12 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
   const outputDirPath = `${outputTargetDirPath}/${movieName}`;
   const outputPath = `${outputDirPath}/${title}.mp4`;
-  const memoText = memo.split('\n').map((line) => `# ${line}`).join('\n');
+  const memoText = [
+    `# name: ${name}`,
+    `# ruby: ${ruby}`,
+    `# clipUrl: ${clipUrl}`,
+    memo.split('\n').map((line) => `# ${line}`).join('\n')
+  ].join('\n');
   const outputWavPath = `${outputDirPath}/${title}.wav`;
 
   const outputBlankPath = `${outputDirPath}/base.mp4`;
@@ -51,9 +58,11 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     const mergeFilter = `-i ${scalePath} -filter_complex "overlay=x=${crop.draw.x}:y=${crop.draw.y}"`;
     const basePath = index === 0 ? outputBlankPath : `${outputDirPath}/${title}-merge-${index - 1}.mp4`;
     const outputMergePath = `${outputDirPath}/${title}-merge-${index}.mp4`;
+    const outputCompletePath = `${outputDirPath}/${title}-complete.mp4`;
     return [
       `ffmpeg -y -i ${cropPath} -vf scale=${crop.draw.width}x${crop.draw.height} ${scalePath}`,
-      `ffmpeg -y -i ${basePath} ${mergeFilter} ${outputMergePath}`
+      `ffmpeg -y -i ${basePath} ${mergeFilter} ${outputMergePath}`,
+      (index === preview.crops.length - 1) ? `cp ${outputMergePath} ${outputCompletePath}` : '',
     ].join('\n');
   });
 
