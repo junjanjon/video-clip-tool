@@ -403,13 +403,7 @@ function App() {
           src={source}
           ref={videoRef} controls
         />
-        <canvas id={'videoCanvas'}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-          }}
-        />
+        <canvas id={'videoCanvas'}/>
       </div>
       <canvas
         id={'clipCanvas'}
