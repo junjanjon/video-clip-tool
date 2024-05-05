@@ -156,11 +156,15 @@ function App() {
           startTime={trimTime[0]}
           endTime={trimTime[1]}
           duration={duration}
-          changeCallback={(newStartTime, newEndTime) => {
+          changeCallback={(newStartTime, newEndTime, isStart) => {
             const startTime = Math.min(Math.max(newStartTime, 0), newEndTime - minDistance);
             const endTime = Math.min(newEndTime, duration);
             setTrimTime([startTime, endTime]);
-            playVideoWrapper(startTime);
+            if (isStart) {
+              playVideoWrapper(startTime);
+            } else {
+              playVideoWrapper(endTime - 2);
+            }
           }}
         />
         <VideoStartPositionSlider

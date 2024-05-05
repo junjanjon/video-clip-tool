@@ -32,15 +32,14 @@ function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
 /**
  * 動画のトリミング範囲を指定するスライダー
  */
-function VideoClipSlider(props: { startTime: number, endTime: number, duration: number, changeCallback: (newStartTime: number, newEndTime: number) => void}) {
+function VideoClipSlider(props: { startTime: number, endTime: number, duration: number, changeCallback: (newStartTime: number, newEndTime: number, isStart: boolean) => void}) {
   const {startTime, endTime, duration, changeCallback} = props;
   const step = 1/60;
 
   const handleChange = (
     _: Event,
     newValue: number | number[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    __: number,
+    activeThumb: number,
   ) => {
     if (!Array.isArray(newValue)) {
       return;
@@ -48,10 +47,11 @@ function VideoClipSlider(props: { startTime: number, endTime: number, duration: 
 
     const first = newValue[0] as number;
     const second = newValue[1] as number;
+    const isStart = activeThumb === 0;
     if (first < second) {
-      changeCallback(first, second);
+      changeCallback(first, second, isStart);
     } else {
-      changeCallback(second, first);
+      changeCallback(second, first, isStart);
     }
   };
 
