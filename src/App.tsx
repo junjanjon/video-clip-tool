@@ -16,6 +16,53 @@ interface Mark {
   label: string;
 }
 
+interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Crop {
+  source: Rect;
+  draw: Rect;
+}
+
+class Preview {
+  size: {
+    width: number
+    height: number
+  };
+  crops: Crop[];
+  video: HTMLVideoElement;
+  canvas: HTMLCanvasElement;
+
+  constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
+    this.size = {
+      width: 640,
+      height: 640
+    };
+    this.crops = [];
+    this.video = video;
+    this.canvas = canvas;
+  }
+
+  onUpdate(){
+    this.canvas.width = this.size.width;
+    this.canvas.height = this.size.height;
+    const context = this.canvas.getContext('2d');
+    if (context) {
+      context.clearRect(0,0, this.size.width, this.size.height);
+      for (const crop of this.crops) {
+        context.drawImage(this.video,
+          crop.source.x, crop.source.y, crop.source.width, crop.source.height,
+          crop.draw.x,crop.draw.y, crop.draw.width, crop.draw.height
+        );
+      }
+    }
+  }
+}
+
 /**
  * 指定された動画の時間に合わせてマークを計算する
  * @param duration
@@ -215,6 +262,41 @@ function App() {
         document.getElementById('root')?.appendChild(downloadLink);
       }
     },
+    {
+      label: <><MovieIcon/></>,
+      callback: () => {
+        if (!videoRef.current) {
+          return;
+        }
+
+        const clipCanvas = document.getElementById('clipCanvas') as HTMLCanvasElement;
+        if (clipCanvas) {
+          const preview = new Preview(videoRef.current, clipCanvas);
+          preview.crops.push({
+            source: {x: 0, y: 0, width: 640, height: 640},
+            draw: {x: 0, y: 0, width: 640, height: 640}
+          });
+          preview.crops.push({
+            source: {x: 640, y: 500, width: 640, height: 500},
+            draw: {x: 320, y: 320, width: 320, height: 320}
+          });
+          setInterval(() => {
+            preview.onUpdate();
+          }, 1000 / 60);
+        }
+        const videoCanvas = document.getElementById('videoCanvas') as HTMLCanvasElement;
+        if (videoCanvas) {
+          videoCanvas.width = videoRef.current.videoWidth;
+          videoCanvas.height = videoRef.current.videoHeight;
+          const context2D = videoCanvas.getContext('2d');
+          if (context2D) {
+            context2D.strokeStyle = 'black';
+            context2D.strokeRect(200, 800, 100, 100);
+            context2D.strokeRect(0, 0, videoRef.current.videoWidth, videoRef.current.videoHeight);
+          }
+        }
+      }
+    },
     createButtonData(0.05, 0),
     createButtonData(0.5, 0),
     createButtonData(0, -0.5),
@@ -312,9 +394,26 @@ function App() {
         sourceRef={sourceRef}
       />
       <hr/>
-      <video id={'target'}
-        src={source}
-        ref={videoRef} controls/>
+      <div
+        style={{
+          position: 'relative',
+        }}
+      >
+        <video id={'target'}
+          src={source}
+          ref={videoRef} controls
+        />
+        <canvas id={'videoCanvas'}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+          }}
+        />
+      </div>
+      <canvas
+        id={'clipCanvas'}
+      />
       {slider}
     </>
   );
