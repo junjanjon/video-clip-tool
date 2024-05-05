@@ -270,7 +270,17 @@ function CropEditor(props: {preview: Preview, setPreview: (preview: Preview) => 
           });
           setPreview({size: preview.size, crops: newCrop});
         }}
+        style={{margin: '10px'}}
       >Add Crop</Button>
+      <Button
+        variant={'contained'}
+        onClick={() => {
+          const newCrop = preview.crops.slice();
+          newCrop.pop();
+          setPreview({size: preview.size, crops: newCrop});
+        }}
+        style={{margin: '10px'}}
+      >Remove Crop</Button>
       <hr/>
       <canvas
         id={'cropCanvas'}
