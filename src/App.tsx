@@ -1,20 +1,15 @@
 import './App.css';
-import {Alert, Button, ButtonGroup, Slider, TextField} from '@mui/material';
+import {Alert, Button, ButtonGroup, TextField} from '@mui/material';
 import {useState, useEffect, useRef, ReactElement} from 'react';
 import MovieIcon from '@mui/icons-material/Movie';
 import MovieFileSelector from './components/MovieFileSelector.tsx';
 import VideoProgressBar from './components/VideoProgressBar.tsx';
-import {convertTimeToText, convertTimeToShortText, convertMilliSecondsTimeToText} from './lib/FormatTime.tsx';
+import VideoStartPositionSlider from './components/VideoStartPositionSlider.tsx';
+import VideoClipSlider from './components/VideoClipSlider.tsx';
+import {convertMilliSecondsTimeToText} from './lib/FormatTime.tsx';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
-const startTimeSpace = 5;
-const endTimeSpace = 20;
 const minDistance = 0.5;
-
-interface Mark {
-  value: number;
-  label: string;
-}
 
 interface Rect {
   x: number;
@@ -63,47 +58,11 @@ class Preview {
   }
 }
 
-/**
- * 指定された動画の時間に合わせてマークを計算する
- * @param duration
- */
-function calculateMarks(duration: number): Mark[] {
-  const durationMarksMapping = [
-    { duration: 60, step: 10 },
-    { duration: 60 * 5, step: 60 },
-    { duration: 60 * 10, step: 60 * 2 },
-    { duration: 60 * 30, step: 60 * 5 },
-    { duration: 60 * 60, step: 60 * 10 },
-    { duration: 60 * 60 * 3, step: 60 * 30 },
-  ];
-  const marks: Mark[] = [];
-  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60 * 60);
-  for (let i = 0; i < duration; i += step) {
-    marks.push({value: i, label: convertTimeToText(i)});
-  }
-  return marks;
-}
 
-function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
-  const duration = endTime - startTime;
-  const durationMarksMapping = [
-    { duration: 30, step: 5 },
-    { duration: 60, step: 10 },
-    { duration: 60 * 5, step: 30 },
-  ];
-  const marks: Mark[] = [];
-  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60);
-  for (let time = startTime; time < (endTime + endTimeSpace); time += step) {
-    const markTime = time - startTime;
-    marks.push({value: time, label: convertTimeToShortText(markTime)});
-  }
-  return marks;
-}
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
-  const step = 1 / 60;
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
   const [source, setSource] = useState<string>('./movies/test.mp4');
@@ -111,8 +70,6 @@ function App() {
   const sourceRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const memoRef = useRef<HTMLInputElement>(null);
-  const [marks, setMarks] = useState<Mark[]>([]);
-  const [trimMarks, setTrimMarks] = useState<Mark[]>([]);
 
   /**
    * 動画変更時のコールバック
@@ -127,7 +84,6 @@ function App() {
           const video = videoRef.current;
           setDuration(() => video.duration);
           setTrimTime(() => [0, video.duration]);
-          setMarks(() => calculateMarks(video.duration));
         }
       }
     }, 1000);
@@ -151,61 +107,6 @@ function App() {
     return () => clearInterval(interval);
   }, [trimTime]);
 
-  /**
-   * トリミング時間開始位置スライダーの値が変更されたときのコールバック
-   * @param _
-   * @param newValue
-   * @param __
-   */
-  const handleChangeRange = (
-    _: Event,
-    newValue: number | number[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    __: number,
-  ) => {
-    if (Array.isArray(newValue)) {
-      return;
-    }
-
-    const startTime = Math.min(Math.max(newValue, 0), duration - 10);
-    const endTime = Math.min(startTime + 10, duration);
-    setTrimTime([startTime, endTime]);
-    setTrimMarks(() => calculateTrimMarks(startTime, endTime));
-    playVideoWrapper(startTime);
-  };
-
-  /**
-   * トリミング時間範囲スライダーの値が変更されたときのコールバック
-   * @param _
-   * @param newValue
-   * @param activeThumb
-   */
-  const handleChange1 = (
-    _: Event,
-    newValue: number | number[],
-    activeThumb: number,
-  ) => {
-    if (!Array.isArray(newValue)) {
-      return;
-    }
-
-    if (activeThumb === 0) {
-      if (videoRef.current) {
-        const startTime = Math.max(Math.min(newValue[0], trimTime[1] - minDistance), 0);
-        setTrimTime([startTime, trimTime[1]]);
-        setTrimMarks(() => calculateTrimMarks(startTime, trimTime[1]));
-        playVideo(videoRef.current, trimTime[0]);
-      }
-    } else {
-      if (videoRef.current) {
-        const endTime = Math.min(Math.max(newValue[1], trimTime[0] + minDistance), videoRef.current.duration);
-        setTrimTime([trimTime[0], endTime]);
-        setTrimMarks(() => calculateTrimMarks(trimTime[0], endTime));
-        playVideo(videoRef.current, endTime - minDistance);
-      }
-    }
-  };
-
   function playVideoWrapper(time: number) {
     if (videoRef.current) {
       playVideo(videoRef.current, time);
@@ -220,7 +121,6 @@ function App() {
           const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
           const endTime = Math.min(trimTime[1] + endDiff, duration);
           setTrimTime([startTime, endTime]);
-          setTrimMarks(() => calculateTrimMarks(startTime, endTime));
           playVideoWrapper(endTime - 2);
         }
       };
@@ -231,7 +131,6 @@ function App() {
           const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
           const endTime = Math.min(trimTime[1] + endDiff, duration);
           setTrimTime([startTime, endTime]);
-          setTrimMarks(() => calculateTrimMarks(startTime, endTime));
           playVideoWrapper(startTime);
         }
       };
@@ -333,29 +232,26 @@ function App() {
             }
           }}
         />
-        <Slider
-          // クリッピングする部分を指定するスライダー
-          getAriaLabel={() => 'Minimum distance'}
-          value={trimTime}
-          onChange={handleChange1}
-          step={step}
-          min={Math.max(trimTime[0] - startTimeSpace, 0)}
-          max={Math.min(trimTime[1] + endTimeSpace, duration)}
-          marks={trimMarks}
-          valueLabelDisplay="on"
-          valueLabelFormat={convertTimeToText}
-          style={{marginTop: '30px'}}
-          disableSwap
+        <VideoClipSlider
+          startTime={trimTime[0]}
+          endTime={trimTime[1]}
+          duration={duration}
+          changeCallback={(newStartTime, newEndTime) => {
+            const startTime = Math.min(Math.max(newStartTime, 0), newEndTime - minDistance);
+            const endTime = Math.min(newEndTime, duration);
+            setTrimTime([startTime, endTime]);
+            playVideoWrapper(startTime);
+          }}
         />
-        <Slider
-          // 全動画時間の中での位置を指定するスライダー
-          value={trimTime[0]}
-          onChange={handleChangeRange}
-          step={step}
-          min={0}
-          max={duration}
-          marks={marks}
-          disableSwap
+        <VideoStartPositionSlider
+          startTime={trimTime[0]}
+          duration={duration}
+          changeCallback={(newStartTime) => {
+            const startTime = Math.min(Math.max(newStartTime, 0), duration - 10);
+            const endTime = Math.min(startTime + 10, duration);
+            setTrimTime([startTime, endTime]);
+            playVideoWrapper(startTime);
+          }}
         />
         {buttons}
         <div>
