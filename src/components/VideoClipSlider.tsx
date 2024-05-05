@@ -15,9 +15,13 @@ function calculateTrimMarks(startTime: number, endTime: number): Mark[] {
     { duration: 30, step: 5 },
     { duration: 60, step: 10 },
     { duration: 60 * 5, step: 30 },
+    { duration: 60 * 10, step: 60 },
+    { duration: 60 * 30, step: 60 * 5 },
+    { duration: 60 * 60, step: 60 * 10 },
+    { duration: 60 * 60 * 3, step: 60 * 30 },
   ];
   const marks: Mark[] = [];
-  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60);
+  const step = durationMarksMapping.find((mapping) => { return duration < mapping.duration; })?.step || (60 * 60);
   for (let time = startTime; time < (endTime + endTimeSpace); time += step) {
     const markTime = time - startTime;
     marks.push({value: time, label: convertTimeToShortText(markTime)});
