@@ -7,11 +7,11 @@ export interface MovieFileSelectorProps {
   source: string;
   setSource: (source: string) => void;
   setDuration: (duration: number) => void;
-  sourceRef: React.RefObject<HTMLInputElement>;
 }
 
 function MovieFileSelector(props: MovieFileSelectorProps) {
-  const {source, setSource, setDuration, sourceRef} = props;
+  const {source, setSource, setDuration} = props;
+  const sourceRef = React.createRef<HTMLInputElement>();
 
   const changeFile = (fileList: FileList | null) => {
     if (fileList && 0 < fileList.length) {
