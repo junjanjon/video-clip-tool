@@ -2,34 +2,70 @@ import {convertMilliSecondsTimeToText} from './FormatTime.tsx';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
 
-function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string) {
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Crop {
+  source: Rect;
+  draw: Rect;
+}
+
+export interface Preview {
+  size: {
+    width: number
+    height: number
+  };
+  crops: Crop[];
+}
+
+function convertTimeToCutCommand(path: string, startTime: number, endTime: number, title: string, memo: string, preview: Preview) {
   const start = convertMilliSecondsTimeToText(startTime);
   // const end = convertMilliSecondsTimeToText(endTime);
-  const duration = convertMilliSecondsTimeToText(endTime - startTime);
+  const durationSeconds = (endTime - startTime);
+  const duration = convertMilliSecondsTimeToText(durationSeconds);
   // path からファイル名を取得
   const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
   const outputDirPath = `${outputTargetDirPath}/${movieName}`;
   const outputPath = `${outputDirPath}/${title}.mp4`;
   const memoText = memo.split('\n').map((line) => `# ${line}`).join('\n');
-  const cropFilter = '-vf crop=640:640:640:80';
-  const outputCropPath = `${outputDirPath}/${title}-crop.mp4`;
-  // const gifFilter = '-filter_complex "[0:v] fps=10,scale=320:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse=dither=none"';
-  // const outputGifPath = `outputs/${movieName}/${title}.gif`;
-  // const outputMp3Path = `outputs/${movieName}/${title}.mp3`;
   const outputWavPath = `${outputDirPath}/${title}.wav`;
+
+  const outputBlankPath = `${outputDirPath}/base.mp4`;
+  const createBlankCommand = `ffmpeg -y -f lavfi -i 'color=c=black:s=${preview.size.width}x${preview.size.height}:r=30000/1001:d=${durationSeconds}' -f lavfi -i 'aevalsrc=0|0:c=stereo:s=44100:d=${duration}' ${outputBlankPath}`;
+
+  const sourceCropCommands = preview.crops.map((crop, index) => {
+    const cropFilter = `-vf crop=${crop.source.width}:${crop.source.height}:${crop.source.x}:${crop.source.y}`;
+    const outputCropPath = `${outputDirPath}/${title}-crop-${index}.mp4`;
+    return [
+      `ffmpeg -y -i ${outputPath} ${cropFilter} ${outputCropPath}`
+    ].join('\n');
+  });
+
+  const mergeCommands = preview.crops.map((crop, index) => {
+    const cropPath = `${outputDirPath}/${title}-crop-${index}.mp4`;
+    const scalePath = `${outputDirPath}/${title}-scale-${index}.mp4`;
+    const mergeFilter = `-i ${scalePath} -filter_complex "overlay=x=${crop.draw.x}:y=${crop.draw.y}"`;
+    const basePath = index === 0 ? outputBlankPath : `${outputDirPath}/${title}-merge-${index - 1}.mp4`;
+    const outputMergePath = `${outputDirPath}/${title}-merge-${index}.mp4`;
+    return [
+      `ffmpeg -y -i ${cropPath} -vf scale=${crop.draw.width}x${crop.draw.height} ${scalePath}`,
+      `ffmpeg -y -i ${basePath} ${mergeFilter} ${outputMergePath}`
+    ].join('\n');
+  });
 
   return [
     `# ${title}`,
     `mkdir -p ${outputDirPath}`,
     // `ffmpeg -y -ss ${start} -i ${path} -to ${end} ${outputPath}`,
     `ffmpeg -y -ss ${start} -i ${path} -t ${duration} ${outputPath}`,
-    // `ffmpeg -y -i ${path} -ss ${start} -to ${end} ${outputPath}`,
-    // NOTE: 1280x720 -> 640x640
-    `ffmpeg -y -i ${outputPath} ${cropFilter} ${outputCropPath}`,
-    // NOTE: 640x640 -> 320x320 gif
-    // `ffmpeg -y -i ${outputCropPath} ${gifFilter} ${outputGifPath}`,
-    // `ffmpeg -y -i ${outputPath} ${outputMp3Path}`,
-    `ffmpeg -y -i ${outputPath} ${outputWavPath}`,
+    `ffmpeg -y -i ${outputPath} -vn ${outputWavPath}`,
+    createBlankCommand,
+    sourceCropCommands.join('\n'),
+    mergeCommands.join('\n'),
     memoText,
     '\n'
   ].join('\n');

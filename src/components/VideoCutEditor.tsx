@@ -1,26 +1,6 @@
 import {Alert, Button, TextField} from '@mui/material';
 import {ReactElement, useEffect, useState} from 'react';
-import {convertTimeToCutCommand} from '../lib/CutCommand.tsx';
-
-interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface Crop {
-  source: Rect;
-  draw: Rect;
-}
-
-interface Preview {
-  size: {
-    width: number
-    height: number
-  };
-  crops: Crop[];
-}
+import {convertTimeToCutCommand, Preview, Rect} from '../lib/CutCommand.tsx';
 
 /**
  * 動画の切り出しコマンドを表示するエディタ
@@ -33,11 +13,18 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const [ruby, setRuby] = useState<string>('ruby');
   const [clipUrl, setClipUrl] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
-  const command = convertTimeToCutCommand(sourcePath, startTime, endTime, title, memo);
+  const [preview, setPreview] = useState<Preview>({
+    size: {width: 1080, height: 1920},
+    crops: []
+  });
+  const command = convertTimeToCutCommand(sourcePath, startTime, endTime, title, memo, preview);
 
   return (
     <div>
-      <CropEditor></CropEditor>
+      <CropEditor
+        preview={preview}
+        setPreview={setPreview}
+      />
       {copiedAlert}
       <TextField
         label="Title"
@@ -145,11 +132,8 @@ function cropVideoUpdate(preview : Preview){
   }
 }
 
-function CropEditor() {
-  const [preview, setPreview] = useState<Preview>({
-    size: {width: 1080, height: 1920},
-    crops: []
-  });
+function CropEditor(props: {preview: Preview, setPreview: (preview: Preview) => void}){
+  const {preview, setPreview} = props;
 
   useEffect(() => {
     const intervalId = setInterval(() => {
