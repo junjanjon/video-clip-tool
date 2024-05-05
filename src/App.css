@@ -7,14 +7,9 @@
 
 video#target {
     max-width: 1280px;
-    max-height: 500px;
-    border-color: #1a1a1a;
-    border-width: 2px;
-    border-style: solid;
 }
 
 #videoCanvas {
-    max-width: 1280px;
     position: absolute;
     top: 0;
     left: 0;

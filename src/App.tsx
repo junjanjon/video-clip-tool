@@ -11,62 +11,12 @@ import VideoCutEditor from './components/VideoCutEditor.tsx';
 
 const minDistance = 0.5;
 
-interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface Crop {
-  source: Rect;
-  draw: Rect;
-}
-
-class Preview {
-  size: {
-    width: number
-    height: number
-  };
-  crops: Crop[];
-  video: HTMLVideoElement;
-  canvas: HTMLCanvasElement;
-
-  constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
-    this.size = {
-      width: 640,
-      height: 640
-    };
-    this.crops = [];
-    this.video = video;
-    this.canvas = canvas;
-  }
-
-  onUpdate(){
-    this.canvas.width = this.size.width;
-    this.canvas.height = this.size.height;
-    const context = this.canvas.getContext('2d');
-    if (context) {
-      context.clearRect(0,0, this.size.width, this.size.height);
-      for (const crop of this.crops) {
-        context.drawImage(this.video,
-          crop.source.x, crop.source.y, crop.source.width, crop.source.height,
-          crop.draw.x,crop.draw.y, crop.draw.width, crop.draw.height
-        );
-      }
-    }
-  }
-}
-
-
-
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentProgressTime, setCurrentProgressTime] = useState<number>(0);
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
   const [source, setSource] = useState<string>('./movies/test.mp4');
-  const sourceRef = useRef<HTMLInputElement>(null);
 
   /**
    * 動画変更時のコールバック
@@ -164,33 +114,6 @@ function App() {
         if (!videoRef.current) {
           return;
         }
-
-        const clipCanvas = document.getElementById('clipCanvas') as HTMLCanvasElement;
-        if (clipCanvas) {
-          const preview = new Preview(videoRef.current, clipCanvas);
-          preview.crops.push({
-            source: {x: 0, y: 0, width: 640, height: 640},
-            draw: {x: 0, y: 0, width: 640, height: 640}
-          });
-          preview.crops.push({
-            source: {x: 640, y: 500, width: 640, height: 500},
-            draw: {x: 320, y: 320, width: 320, height: 320}
-          });
-          setInterval(() => {
-            preview.onUpdate();
-          }, 1000 / 60);
-        }
-        const videoCanvas = document.getElementById('videoCanvas') as HTMLCanvasElement;
-        if (videoCanvas) {
-          videoCanvas.width = videoRef.current.videoWidth;
-          videoCanvas.height = videoRef.current.videoHeight;
-          const context2D = videoCanvas.getContext('2d');
-          if (context2D) {
-            context2D.strokeStyle = 'black';
-            context2D.strokeRect(200, 800, 100, 100);
-            context2D.strokeRect(0, 0, videoRef.current.videoWidth, videoRef.current.videoHeight);
-          }
-        }
       }
     },
     createButtonData(0.05, 0),
@@ -255,7 +178,7 @@ function App() {
           {convertMilliSecondsTimeToText(trimTime[0])} - {convertMilliSecondsTimeToText(trimTime[1])} ({convertMilliSecondsTimeToText(trimTime[1] - trimTime[0])})
         </div>
         <VideoCutEditor
-          sourcePath={sourceRef.current?.value || 'source.mp4'}
+          sourcePath={source}
           startTime={trimTime[0]}
           endTime={trimTime[1]}
         />
@@ -268,7 +191,6 @@ function App() {
         source={source}
         setSource={setSource}
         setDuration={setDuration}
-        sourceRef={sourceRef}
       />
       <hr/>
       <div
@@ -282,9 +204,6 @@ function App() {
         />
         <canvas id={'videoCanvas'}/>
       </div>
-      <canvas
-        id={'clipCanvas'}
-      />
       {slider}
     </>
   );
@@ -312,7 +231,5 @@ function replayVideo(video: HTMLVideoElement, startTime : number, endTime : numb
     video.play();
   }
 }
-
-
 
 export default App;
