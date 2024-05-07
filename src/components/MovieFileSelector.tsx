@@ -6,16 +6,18 @@ import {TextField} from '@mui/material';
 export interface MovieFileSelectorProps {
   source: string;
   setSource: (source: string) => void;
+  setSourcePath: (sourcePath: string) => void;
   setDuration: (duration: number) => void;
 }
 
 function MovieFileSelector(props: MovieFileSelectorProps) {
-  const {source, setSource, setDuration} = props;
+  const {source, setSource, setSourcePath, setDuration} = props;
   const sourceRef = React.createRef<HTMLInputElement>();
 
   const changeFile = (fileList: FileList | null) => {
     if (fileList && 0 < fileList.length) {
       setSource(URL.createObjectURL(fileList[0]));
+      setSourcePath(fileList[0].name);
       if (sourceRef.current) {
         sourceRef.current.value = fileList[0].name;
       }
@@ -35,6 +37,7 @@ function MovieFileSelector(props: MovieFileSelectorProps) {
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             setSource(sourceRef.current?.value || '');
+            setSourcePath(sourceRef.current?.value || '');
             setDuration(-1);
           }
         }}

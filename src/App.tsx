@@ -17,6 +17,7 @@ function App() {
   const [trimTime, setTrimTime] = useState<number[]>([0, 60]);
   const [duration, setDuration] = useState<number>(-1);
   const [source, setSource] = useState<string>('./movies/test.mp4');
+  const [sourcePath, setSourcePath] = useState<string>('./movies/test.mp4');
 
   /**
    * 動画変更時のコールバック
@@ -182,7 +183,7 @@ function App() {
           {convertMilliSecondsTimeToText(trimTime[0])} - {convertMilliSecondsTimeToText(trimTime[1])} ({convertMilliSecondsTimeToText(trimTime[1] - trimTime[0])})
         </div>
         <VideoCutEditor
-          sourcePath={source}
+          sourcePath={sourcePath}
           startTime={trimTime[0]}
           endTime={trimTime[1]}
         />
@@ -194,6 +195,7 @@ function App() {
       <MovieFileSelector
         source={source}
         setSource={setSource}
+        setSourcePath={setSourcePath}
         setDuration={setDuration}
       />
       <hr/>
