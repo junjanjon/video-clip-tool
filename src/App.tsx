@@ -69,7 +69,8 @@ function App() {
           const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
           const endTime = Math.min(trimTime[1] + endDiff, duration);
           setTrimTime([startTime, endTime]);
-          playVideoWrapper(endTime - 2);
+          const videoStartTime = Math.max(endTime - 2, startTime);
+          playVideoWrapper(videoStartTime);
         }
       };
     } else {
@@ -105,16 +106,10 @@ function App() {
         const downloadLink = document.createElement('a');
         downloadLink.appendChild(canvas);
         downloadLink.href = canvas.toDataURL('image/png');
-        downloadLink.download = 'thumbnail.png';
+        const name = sourcePath.replace(/.+\//, '').replace(/\..+/, '');
+        downloadLink.download = `thumbnail-${name}-${Date.now()}.png`;
         document.getElementById('root')?.appendChild(downloadLink);
-      }
-    },
-    {
-      label: <><MovieIcon/></>,
-      callback: () => {
-        if (!videoRef.current) {
-          return;
-        }
+        downloadLink.click();
       }
     },
     createButtonData(0.05, 0),
