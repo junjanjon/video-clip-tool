@@ -9,6 +9,7 @@ import {convertTimeToCutCommand, Preview, Rect} from '../lib/CutCommand.tsx';
 function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: number}) {
   const {sourcePath, startTime, endTime} = props;
   const [copiedAlert, setCopiedAlert] = useState<ReactElement>(<> </>);
+  const [videoId, setVideoId] = useState<string>('');
   const [title, setTitle] = useState<string>('title');
   const [name, setName] = useState<string>('name');
   const [ruby, setRuby] = useState<string>('ruby');
@@ -31,40 +32,56 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
       />
       {copiedAlert}
       <TextField
+        label="Video ID"
+        fullWidth={true}
+        value={videoId}
+        onChange={(event) => {setVideoId(event.target.value);}}
+        style={{marginTop: '10px'}}/>
+      <TextField
         label="Title"
         fullWidth={true}
-        defaultValue={title}
+        value={title}
         onChange={(event) => {setTitle(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
         label="Name"
         fullWidth={true}
-        defaultValue={name}
+        value={name}
         onChange={(event) => {setName(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
         label="Ruby"
         fullWidth={true}
-        defaultValue={ruby}
+        value={ruby}
         onChange={(event) => {setRuby(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
         label="Category"
         fullWidth={true}
-        defaultValue={category}
+        value={category}
         onChange={(event) => {setCategory(event.target.value);}}
         style={{marginTop: '10px'}}
       />
       <TextField
         label="Clip URL"
         fullWidth={true}
-        defaultValue={clipUrl}
+        value={clipUrl}
         onChange={(event) => {setClipUrl(event.target.value);}}
         style={{marginTop: '10px'}}
       />
+      <Button
+        variant={'contained'}
+        onClick={() => {
+          const timeStamp = Math.floor(startTime).toString();
+          const videoWithTimestamp = `https://www.youtube.com/watch?v=${videoId}&t=${timeStamp}`;
+          setClipUrl(videoWithTimestamp);
+        }}
+        style={{marginTop: '10px'}}>
+        Set video with timestamp URL
+      </Button>
       <TextField
         label="Memo"
         fullWidth={true}
