@@ -118,6 +118,8 @@ function App() {
     createButtonData(0, -0.05),
     createButtonData(0, 0.05),
     createButtonData(0, 0.5),
+    createButtonData(-10000, 0),
+    createButtonData(0, 10000),
   ];
 
   const buttons = <ButtonGroup>
