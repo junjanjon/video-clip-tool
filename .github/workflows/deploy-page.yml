@@ -3,9 +3,6 @@ name: Deploy static content to Pages
 on:
   push:
     branches: ["main"]
-  schedule:
-    # 日本時間(UTC+9) 4時
-    - cron: "0 19 * * *"
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
