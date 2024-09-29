@@ -16,6 +16,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const [category, setCategory] = useState<string>('emotions');
   const [clipUrl, setClipUrl] = useState<string>('');
   const [memo, setMemo] = useState<string>('');
+  const [isPreview, setIsPreview] = useState<boolean>(false);
   const [preview, setPreview] = useState<Preview>({
     size: {width: 1080, height: 1920},
     crops: []
@@ -26,10 +27,22 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
 
   return (
     <div>
-      <CropEditor
-        preview={preview}
-        setPreview={setPreview}
-      />
+      <div>
+        <label htmlFor={'isPreview'}>isPreview</label>
+        <input
+          id={'isPreview'}
+          type="checkbox"
+          checked={isPreview}
+          onChange={(event) => {
+            setIsPreview(event.target.checked);
+          }}
+        />
+        {isPreview ?
+          <CropEditor
+            preview={preview}
+            setPreview={setPreview}
+          /> : <></>}
+      </div>
       {copiedAlert}
       <TextField
         label="Video ID"
