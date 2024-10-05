@@ -1,13 +1,14 @@
 import './App.css';
 import {Button, ButtonGroup} from '@mui/material';
 import {useState, useEffect, useRef} from 'react';
-import MovieIcon from '@mui/icons-material/Movie';
+import {PlayArrow, Pause, Replay, Movie} from '@mui/icons-material';
 import MovieFileSelector from './components/MovieFileSelector.tsx';
 import VideoProgressBar from './components/VideoProgressBar.tsx';
 import VideoStartPositionSlider from './components/VideoStartPositionSlider.tsx';
 import VideoClipSlider from './components/VideoClipSlider.tsx';
 import {convertMilliSecondsTimeToText} from './lib/FormatTime.tsx';
 import VideoCutEditor from './components/VideoCutEditor.tsx';
+import WaveSurfer from 'wavesurfer.js';
 
 const minDistance = 0.5;
 
@@ -18,6 +19,7 @@ function App() {
   const [duration, setDuration] = useState<number>(-1);
   const [source, setSource] = useState<string>('./movies/test.mp4');
   const [sourcePath, setSourcePath] = useState<string>('./movies/test.mp4');
+  const [waveSurfer, setWaveSurfer] = useState<WaveSurfer>();
 
   /**
    * 動画変更時のコールバック
@@ -32,6 +34,24 @@ function App() {
           const video = videoRef.current;
           setDuration(() => video.duration);
           setTrimTime(() => [0, video.duration]);
+          // 古いWaveSurferを削除
+          if (waveSurfer) {
+            waveSurfer.destroy();
+          }
+          const ws = WaveSurfer.create({
+            container: '#waveSurfer',
+            waveColor: 'violet',
+            progressColor: 'purple',
+            cursorColor: 'navy',
+            height: 100,
+            media: video,
+            dragToSeek: true,
+            autoCenter: false,
+          });
+          ws.on('click', () => {
+            ws.pause();
+          });
+          setWaveSurfer(() => ws);
         }
       }
     }, 1000);
@@ -61,6 +81,12 @@ function App() {
     }
   }
 
+  function setTrimTimeWrapper([startTime, endTime] : [number, number]) {
+    setTrimTime([startTime, endTime]);
+    const zoomLevel = Math.max(10, Math.min(1000, 1000 / (endTime - startTime)));
+    waveSurfer?.zoom(zoomLevel);
+  }
+
   function createButtonData(startDiff: number, endDiff : number) {
     if (startDiff === 0) {
       return {
@@ -68,7 +94,7 @@ function App() {
         callback: () => {
           const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
           const endTime = Math.min(trimTime[1] + endDiff, duration);
-          setTrimTime([startTime, endTime]);
+          setTrimTimeWrapper([startTime, endTime]);
           const videoStartTime = Math.max(endTime - 2, startTime);
           playVideoWrapper(videoStartTime);
         }
@@ -79,18 +105,73 @@ function App() {
         callback: () => {
           const startTime = Math.min(Math.max(trimTime[0] + startDiff, 0), trimTime[1] + endDiff - minDistance);
           const endTime = Math.min(trimTime[1] + endDiff, duration);
-          setTrimTime([startTime, endTime]);
+          setTrimTimeWrapper([startTime, endTime]);
           playVideoWrapper(startTime);
         }
       };
     }
   }
 
+  const waveSurferButtonData = [
+    {
+      label: <><Replay/></>,
+      callback: () => {
+        if (videoRef.current) {
+          playVideoWrapper(trimTime[0]);
+        }
+      }
+    },
+    {
+      label: <>
+        {videoRef.current?.paused ? <PlayArrow/> : <Pause/>}
+      </>,
+      callback: () => {
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play();
+          } else {
+            videoRef.current.pause();
+          }
+        }
+      }
+    },
+    {
+      label: <><span>Set Start From Now</span></>,
+      callback: () => {
+        if (videoRef.current) {
+          const startTime = videoRef.current.currentTime;
+          const endTime = trimTime[1];
+          setTrimTimeWrapper([startTime, endTime]);
+        }
+      }
+    },
+    {
+      label: <><span>Set End From Now</span></>,
+      callback: () => {
+        if (videoRef.current) {
+          const startTime = trimTime[0];
+          const endTime = videoRef.current.currentTime;
+          setTrimTimeWrapper([startTime, endTime]);
+        }
+      }
+    },
+    {
+      label: <><span>Normalize</span></>,
+      callback: () => {
+        if (waveSurfer) {
+          const options = waveSurfer.options;
+          options.normalize = !options.normalize;
+          waveSurfer.setOptions(options);
+        }
+      }
+    }
+  ];
+
   const buttonData = [
     createButtonData(-0.5, 0),
     createButtonData(-0.05, 0),
     {
-      label: <><MovieIcon/></>,
+      label: <><Movie/></>,
       callback: () => {
         if (!videoRef.current) {
           return;
@@ -122,6 +203,18 @@ function App() {
     createButtonData(0, 10000),
   ];
 
+  const waveSurferButtons = <ButtonGroup>
+    {
+      waveSurferButtonData.map((data, index) => {
+        return <Button
+          key={index}
+          onClick={data.callback}>
+          {data.label}
+        </Button>;
+      })
+    }
+  </ButtonGroup>;
+
   const buttons = <ButtonGroup>
     {
       buttonData.map((data, index) => {
@@ -137,9 +230,6 @@ function App() {
   const slider = (0 < duration) ?
     (
       <>
-        <div>
-          {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}
-        </div>
         <VideoProgressBar
           currentTime={currentProgressTime}
           minTime={trimTime[0]}
@@ -157,7 +247,7 @@ function App() {
           changeCallback={(newStartTime, newEndTime, isStart) => {
             const startTime = Math.min(Math.max(newStartTime, 0), newEndTime - minDistance);
             const endTime = Math.min(newEndTime, duration);
-            setTrimTime([startTime, endTime]);
+            setTrimTimeWrapper([startTime, endTime]);
             if (isStart) {
               playVideoWrapper(startTime);
             } else {
@@ -171,7 +261,7 @@ function App() {
           changeCallback={(newStartTime) => {
             const startTime = Math.min(Math.max(newStartTime, 0), duration - 10);
             const endTime = Math.min(startTime + 10, duration);
-            setTrimTime([startTime, endTime]);
+            setTrimTimeWrapper([startTime, endTime]);
             playVideoWrapper(startTime);
           }}
         />
@@ -207,7 +297,13 @@ function App() {
         />
         <canvas id={'videoCanvas'}/>
       </div>
+      <div>
+        {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}
+      </div>
+      <div id={'waveSurfer'}/>
+      {waveSurferButtons}
       {slider}
+      <hr/>
     </>
   );
 }
