@@ -67,14 +67,14 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     ].join('\n');
   });
 
-  const dataPath = `../../dataset/sounds/${movieName}.yml`;
+  const dataPath = `../../../dataset/sounds/${movieName}.yml`;
   const createDataCommand = [
     `touch ${dataPath}`,
     `cat <<EOF >> ${dataPath}`,
     `- name: "${name}"`,
     `  ruby: "${ruby}"`,
     `  source: "${movieName}"`,
-    `  fileName: "${movieName}/${title}.wav"`,
+    `  fileName: "${movieName}/${title}.mp3"`,
     `  category: [${category.split(',').map((c) => `"${c}"`)}]`,
     `  clipUrl: "${clipUrl}"`,
     'EOF',
