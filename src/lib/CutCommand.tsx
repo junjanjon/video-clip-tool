@@ -43,7 +43,7 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   const outputWavPath = `${outputDirPath}/${title}.wav`;
 
   const outputBlankPath = `${outputDirPath}/base.mp4`;
-  const createBlankCommand = `ffmpeg -y -f lavfi -i 'color=c=black:s=${preview.size.width}x${preview.size.height}:r=30000/1001:d=${durationSeconds}' -f lavfi -i 'aevalsrc=0|0:c=stereo:s=44100:d=${duration}' ${outputBlankPath}`;
+  const createBlankCommand = `ffmpeg -y -f lavfi -i 'color=c=black:s=${preview.size.width}x${preview.size.height}:r=30000/1001:d=${durationSeconds}' -f lavfi -i 'aevalsrc=0|0:c=stereo:s=44100:d=${durationSeconds}' ${outputBlankPath}`;
 
   const sourceCropCommands = preview.crops.map((crop, index) => {
     const cropFilter = `-vf crop=${crop.source.width}:${crop.source.height}:${crop.source.x}:${crop.source.y}`;
