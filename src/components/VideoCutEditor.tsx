@@ -1,4 +1,4 @@
-import {Alert, Button, Grid, TextField} from '@mui/material';
+import {Alert, Button, Checkbox, FormControlLabel, Grid, TextField} from '@mui/material';
 import {ReactElement, useEffect, useState} from 'react';
 import {convertTimeToCutCommand, Preview, Rect} from '../lib/CutCommand.tsx';
 
@@ -15,6 +15,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const [ruby, setRuby] = useState<string>('ruby');
   const [category, setCategory] = useState<string>('emotions');
   const [clipUrl, setClipUrl] = useState<string>('');
+  const [isAutoClipUrl, setIsAutoClipUrl] = useState<boolean>(true);
   const [memo, setMemo] = useState<string>('');
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [preview, setPreview] = useState<Preview>({
@@ -24,6 +25,14 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const command = convertTimeToCutCommand(sourcePath, startTime, endTime,
     title, name, ruby, category, clipUrl,
     memo, preview);
+
+  if (isAutoClipUrl) {
+    const timeStamp = Math.floor(startTime).toString();
+    const videoWithTimestamp = `https://www.youtube.com/watch?v=${videoId}&t=${timeStamp}`;
+    if (clipUrl !== videoWithTimestamp) {
+      setClipUrl(videoWithTimestamp);
+    }
+  }
 
   return (
     <div>
@@ -43,15 +52,14 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
             setPreview={setPreview}
           /> : <></>}
       </div>
-      {copiedAlert}
       <TextField
-        label="Video ID"
+        label="YouTube Video ID"
         fullWidth={true}
         value={videoId}
         onChange={(event) => {setVideoId(event.target.value);}}
         style={{marginTop: '10px'}}/>
       <TextField
-        label="Title"
+        label="File Name"
         fullWidth={true}
         value={title}
         onChange={(event) => {setTitle(event.target.value);}}
@@ -85,16 +93,15 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
         onChange={(event) => {setClipUrl(event.target.value);}}
         style={{marginTop: '10px'}}
       />
-      <Button
-        variant={'contained'}
-        onClick={() => {
-          const timeStamp = Math.floor(startTime).toString();
-          const videoWithTimestamp = `https://www.youtube.com/watch?v=${videoId}&t=${timeStamp}`;
-          setClipUrl(videoWithTimestamp);
-        }}
-        style={{marginTop: '10px'}}>
-        Set video with timestamp URL
-      </Button>
+      <FormControlLabel
+        label="Auto Clip URL"
+        control={
+          <Checkbox
+            checked={isAutoClipUrl}
+            onChange={(event) => {
+              setIsAutoClipUrl(event.target.checked);
+            }}/>
+        }/>
       <TextField
         label="Memo"
         fullWidth={true}
@@ -104,6 +111,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
         multiline={true}
         minRows={5}
       />
+      {copiedAlert}
       <textarea
         value={command}
         style={{width: '100%', height: '300px', marginTop: '10px'}}
