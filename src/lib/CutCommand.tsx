@@ -1,6 +1,7 @@
 import {convertMilliSecondsTimeToText} from './FormatTime.tsx';
 
 const outputTargetDirPath = import.meta.env.VITE_OUTPUT_DIR_PATH || 'outputs';
+const sourceDirPath = import.meta.env.VITE_SOURCE_DIR_PATH || '.';
 
 export interface Rect {
   x: number;
@@ -30,7 +31,9 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
   const durationSeconds = (endTime - startTime);
   const duration = convertMilliSecondsTimeToText(durationSeconds);
   // path からファイル名を取得
-  const movieName = path.split('/').pop()?.split('.').shift() || 'movie-name';
+  const movieFileName = path.split('/').pop() || 'movie-name.mp4';
+  const movieName = movieFileName?.split('.').shift() || 'movie-name';
+  const sourcePath = `${sourceDirPath}/${movieFileName}`;
   const outputDirPath = `${outputTargetDirPath}/${movieName}`;
   const outputPath = `${outputDirPath}/${title}.mp4`;
   const memoText = [
@@ -67,7 +70,7 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     ].join('\n');
   });
 
-  const dataPath = `../../../dataset/sounds/${movieName}.yml`;
+  const dataPath = `./${movieName}.yml`;
   const createDataCommand = [
     `touch ${dataPath}`,
     `cat <<EOF >> ${dataPath}`,
@@ -84,7 +87,7 @@ function convertTimeToCutCommand(path: string, startTime: number, endTime: numbe
     `# ${title}`,
     `mkdir -p ${outputDirPath}`,
     // `ffmpeg -y -ss ${start} -i ${path} -to ${end} ${outputPath}`,
-    `ffmpeg -y -ss ${start} -i ${path} -t ${duration} ${outputPath}`,
+    `ffmpeg -y -ss ${start} -i ${sourcePath} -t ${duration} ${outputPath}`,
     `ffmpeg -y -i ${outputPath} -vn ${outputWavPath}`,
     createBlankCommand,
     sourceCropCommands.join('\n'),
