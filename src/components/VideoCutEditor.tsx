@@ -1,6 +1,31 @@
 import {Alert, Button, Checkbox, FormControlLabel, Grid, TextField} from '@mui/material';
-import {ReactElement, useEffect, useState} from 'react';
+import {ReactElement, useEffect, useReducer, useState} from 'react';
 import {convertTimeToCutCommand, Preview, Rect} from '../lib/CutCommand.tsx';
+
+function categoryListReducer(state: string, action: {
+    type: 'set' | 'edit',
+    category: string
+}): string {
+  switch (action.type) {
+  case 'edit':
+  {
+    return action.category;
+  }
+  case 'set':
+  {
+    // カテゴリの中にボタンのカテゴリが含まれていない場合は、追加する
+    // カテゴリの中にボタンのカテゴリが含まれている場合は、削除する
+    const categoryList = state.split(',').filter((value) => value !== '');
+    if (categoryList.includes(action.category)) {
+      return categoryList.filter((value) => value !== action.category).join(',');
+    } else {
+      categoryList.push(action.category);
+      categoryList.sort();
+      return categoryList.join(',');
+    }
+  }
+  }
+}
 
 /**
  * 動画の切り出しコマンドを表示するエディタ
@@ -13,7 +38,7 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
   const [title, setTitle] = useState<string>('title');
   const [name, setName] = useState<string>('name');
   const [ruby, setRuby] = useState<string>('ruby');
-  const [category, setCategory] = useState<string>('emotions');
+  const [category, updateCategoryList] = useReducer(categoryListReducer, 'emotions');
   const [clipUrl, setClipUrl] = useState<string>('');
   const [isAutoClipUrl, setIsAutoClipUrl] = useState<boolean>(true);
   const [memo, setMemo] = useState<string>('');
@@ -33,6 +58,24 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
       setClipUrl(videoWithTimestamp);
     }
   }
+
+  const reservedCategoryList = ['collab', 'comment', 'damage', 'emotions',
+    'english', 'game', 'intonation', 'kawaii', 'lucky', 'maikka',
+    'meigen', 'meme', 'miteruyo', 'outa', 'se', 'sensitive', 'sokuochi',
+    'supacha', 'tira', 'waraigoe'];
+  const reservedCategoryButtons = reservedCategoryList.map((tag) => {
+    return <Button
+      variant={'outlined'}
+      key={tag}
+      onClick={() => {
+        updateCategoryList({type: 'set', category: tag});
+      }}
+      style={{
+        textTransform: 'none',
+        margin: '5px'
+      }}
+    >{tag}</Button>;
+  });
 
   return (
     <div>
@@ -83,9 +126,10 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
         label="Category"
         fullWidth={true}
         value={category}
-        onChange={(event) => {setCategory(event.target.value);}}
+        onChange={(event) => {updateCategoryList({type: 'edit', category: event.target.value});}}
         style={{marginTop: '10px'}}
       />
+      {reservedCategoryButtons}
       <TextField
         label="Clip URL"
         fullWidth={true}
