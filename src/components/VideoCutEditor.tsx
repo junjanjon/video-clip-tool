@@ -64,8 +64,9 @@ function VideoCutEditor(props: {sourcePath: string, startTime: number, endTime: 
     'meigen', 'meme', 'miteruyo', 'outa', 'se', 'sensitive', 'sokuochi',
     'supacha', 'tira', 'waraigoe'];
   const reservedCategoryButtons = reservedCategoryList.map((tag) => {
+    const isSelected = category.split(',').includes(tag);
     return <Button
-      variant={'outlined'}
+      variant={isSelected ? 'contained' : 'outlined'}
       key={tag}
       onClick={() => {
         updateCategoryList({type: 'set', category: tag});
